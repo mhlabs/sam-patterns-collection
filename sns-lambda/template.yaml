@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+Metadata:
+  PatternTransform:
+    Properties:
+      - JSONPath: $.Resources.OrderFunction.Properties.CodeUri
+        Message: Set code URI
+        InputType: string
+    Placeholders:
+      - Placeholder: Order
+        message: Set value for 'Order' placeholder
+Resources:
+  OrderTopic:
+    Type: AWS::SNS::Topic
+  OrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: OrderFunction.handler
+      Events:
+        SNS:
+          Type: SNS
