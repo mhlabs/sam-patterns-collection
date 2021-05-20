@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+Metadata:
+  PatternTransform:
+    Properties:
+      - JSONPath: $.Resources.ConsumerFunction.Properties.Timeout
+        Message: Set timeout
+        InputType: number
+    Placeholders:
+      - Placeholder: Consumer
+        message: Set value for 'Consumer' placeholder
+      - Placeholder: AddressTable
+        message: Set value for 'AddressTable' placeholder
+Resources:
+  ConsumerFunction:
+    Type: AWS::Serverless::Function
+    Description: Invoked by EventBridge rule
+    Properties:
+      CodeUri: src/
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Timeout: 3
+      Environment:
+        Variables:
+          TableName: !Ref AddressTable
+      Events:
+        MyEvent:
+          Type: EventBridgeRule
+          Properties:
+            Pattern:
+              source:
+                - address-service
+              detail-type:
+                - AddressEvent
+              detail:
+                data:
+                  new:
+                    City:
+                      - anything-but: Stockholm
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref AddressTable
+  AddressTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
