@@ -24,8 +24,5 @@ Resources:
         Logs:
           Type: CloudWatchLogs
           Properties:
-            LogGroupName: /aws/lambda/env-logs-LogsProcessorV2-FH5DN6XR2QQX
+            LogGroupName: /aws/lambda/your-log-group
             FilterPattern: mathem.apimonitoring
-      Policies:
-        - DynamoDBWritePolicy:
-            TableName: !Ref ApiGraphTable
