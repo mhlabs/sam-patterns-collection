@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+Metadata:
+  PatternTransform:
+    Properties:
+      - JSONPath: >-
+          $.Resources.LogsConsumer.Properties.Events.Logs.Properties.LogGroupName
+        Message: Set log group name
+        InputType: string
+    Placeholders:
+      - Placeholder: LogsConsumer
+        message: Set value for 'LogsConsumer' placeholder
+Resources:
+  LogsConsumer:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: LogsConsumer.handler
+      Runtime: nodejs14.x
+      CodeUri: src/
+      MemorySize: 128
+      Timeout: 3
+      Events:
+        Logs:
+          Type: CloudWatchLogs
+          Properties:
+            LogGroupName: /aws/lambda/env-logs-LogsProcessorV2-FH5DN6XR2QQX
+            FilterPattern: mathem.apimonitoring
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref ApiGraphTable
