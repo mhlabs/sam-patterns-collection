@@ -17,6 +17,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
+      Runtime: nodejs14.x
       Handler: OrderFunction.handler
       Events:
         SNS:
