@@ -3,9 +3,8 @@ Transform:
   - AWS::Serverless-2016-10-31
 Globals:
   Function:
-    Runtime: nodejs12.x
+    Runtime: nodejs14.x
     CodeUri: .
-    Handler: src/handlers/dataloader.handler
     MemorySize: 256
     Timeout: 30
     Environment:
@@ -21,11 +20,6 @@ Resources:
     Properties:
       AccessControl: Private
       BucketName: !Sub ${AWS::AccountId}-${AWS::StackName}
-      LifecycleConfiguration:
-        Rules:
-          - Id: DeleteContentAfter30Days
-            Status: Enabled
-            ExpirationInDays: 30
   SeedSelectRanges:
     Type: AWS::Serverless::Function
     Properties:
@@ -43,17 +37,8 @@ Resources:
       Policies:
         - S3ReadPolicy:
             BucketName: !Ref S3Bucket
-        - Version: 2012-10-17
-          Statement:
-            - Sid: Statement1
-              Effect: Allow
-              Action:
-                - sns:Publish
-              Resource:
-                - !ImportValue product-productsales-TopicArn
       Environment:
         Variables:
-          TopicArn: !ImportValue product-productsales-TopicArn
           S3Bucket: !Ref S3Bucket
   StateMachine:
     Type: AWS::Serverless::StateMachine
