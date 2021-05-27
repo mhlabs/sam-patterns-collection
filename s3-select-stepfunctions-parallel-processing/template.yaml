@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+Metadata:
+  PatternTransform:
+    Properties: []
+    Placeholders:
+      - Placeholder: S3Bucket
+        message: Set value for 'S3Bucket' placeholder
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName: !Sub ${AWS::AccountId}-${AWS::StackName}
+  SeedSelectRanges:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/seedSelectRanges.handler
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref S3Bucket
+      Environment:
+        Variables:
+          S3Bucket: !Ref S3Bucket
+  SelectRangeAndSend:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/SelectRangeAndSend.handler
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref S3Bucket
+        - Version: 2012-10-17
+      Environment:
+        Variables:
+          S3Bucket: !Ref S3Bucket
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub ${AWS::StackName}-StateMachine
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Sid: Statement1
+              Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource:
+                - !Sub >-
+                  arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-*
+      Definition:
+        StartAt: SeedSelectRanges
+        States:
+          SeedSelectRanges:
+            Type: Task
+            Resource: !GetAtt SeedSelectRanges.Arn
+            Next: Map
+            Retry:
+              - BackoffRate: 2
+                ErrorEquals:
+                  - States.ALL
+                IntervalSeconds: 30
+                MaxAttempts: 3
+          Map:
+            End: true
+            ItemsPath: $.StartByteList
+            Iterator:
+              StartAt: SelectRangeAndSend
+              States:
+                SelectRangeAndSend:
+                  Type: Task
+                  Resource: !GetAtt SelectRangeAndSend.Arn
+                  End: true
+                  Retry:
+                    - BackoffRate: 2
+                      ErrorEquals:
+                        - States.ALL
+                      IntervalSeconds: 30
+                      MaxAttempts: 3
+            Parameters:
+              Bucket:
+                $: $.Bucket
+              Key:
+                $: $.Key
+              StartByte:
+                $: $$.Map.Item.Value
+              ContentLength:
+                $: $.ContentLength
+            Type: Map
+      Events:
+        S3Trigger:
+          Type: EventBridgeRule
+          Properties:
+            InputPath: $.detail.requestParameters
+            Pattern:
+              source:
+                - aws.s3
+              detail-type:
+                - AWS API Call via CloudTrail
+              detail:
+                eventSource:
+                  - s3.amazonaws.com
+                eventName:
+                  - PutObject
+                  - CompleteMultipartUpload
+                requestParameters:
+                  bucketName:
+                    - !Ref S3Bucket
