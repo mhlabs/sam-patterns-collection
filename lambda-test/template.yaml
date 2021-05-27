@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+Globals:
+  Function:
+    CodeUri: ./src
+    Runtime: nodejs14.x
+    MemorySize: 128
+    Timeout: 15
+Metadata:
+  PatternTransform:
+    Properties: []
+    Placeholders: []
+Resources:
+  LambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppName}-function
+      Handler: app.handler
+      Environment:
+        Variables:
+          Variable1: 1234
+          Variable2: ABCD
