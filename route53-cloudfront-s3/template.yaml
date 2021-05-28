@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+Metadata:
+  PatternTransform:
+    Properties: []
+    Placeholders: []
+Parameters:
+  DomainName:
+    Type: String
+    Default: system-map.mhdev.se
+  HostedZone:
+    Type: String
+    Default: mhdev.se.
+  CertificateArn:
+    Description: >-
+      prod=arn:aws:acm:us-east-1:329202332985:certificate/4fbe84f2-af40-46df-a8c1-0a15726bfaf3
+      dev=arn:aws:acm:us-east-1:751354400372:certificate/5e257477-103f-46c4-8347-a21fa74f555c
+    Type: String
+    Default: >-
+      arn:aws:acm:us-east-1:751354400372:certificate/5e257477-103f-46c4-8347-a21fa74f555c
+Resources:
+  CloudFrontOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: SPA s3 origin
+  CloudfrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref DomainName
+        Comment: Cloudfront distribution for system map
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          SslSupportMethod: sni-only
+        Origins:
+          - Id: s3-website
+            DomainName: !GetAtt S3Bucket.DomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub >-
+                origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
+        DefaultCacheBehavior:
+          Compress: 'true'
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          ForwardedValues:
+            QueryString: false
+          TargetOriginId: s3-website
+          ViewerProtocolPolicy: redirect-to-https
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref DomainName
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: s3:GetObject
+            Resource:
+              - !Sub arn:aws:s3:::${S3Bucket}/*
+            Principal:
+              AWS: !Sub >-
+                arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
+                ${CloudFrontOriginAccessIdentity}
+  DNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Ref DomainName
+      Type: A
+      HostedZoneName: !Ref HostedZone
+      AliasTarget:
+        DNSName: !GetAtt CloudfrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
