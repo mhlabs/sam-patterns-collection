@@ -1,1 +1,0 @@
-# eventbridge-lambda-s3

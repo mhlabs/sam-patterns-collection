@@ -1,1 +1,0 @@
-# apigatewayv2-lambda

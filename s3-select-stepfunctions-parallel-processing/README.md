@@ -1,1 +1,0 @@
-# s3-select-stepfunctions-parallel-processing
