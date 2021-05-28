@@ -29,11 +29,10 @@ exports.handler = async function (event, context) {
   };
 
   const results = await selectFromS3(params);
-  const resultArray = await calculateScores(results);
-  for (const item of resultArray) {
+  for (const item of results) {
     //handle item
   }
-  console.log(`${resultArray.length} items processed`);
+  console.log(`${results.length} items processed`);
 };
 
 async function selectFromS3(params) {
