@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+Metadata:
+  PatternTransform:
+    Properties:
+      - JSONPath: >-
+          $.Resources.MyItemConsumer.Properties.Events.MyItemEvent.Properties.EventBusName
+        Message: Set eventbus
+        InputType: string
+      - JSONPath: >-
+          $.Resources.MyItemConsumer.Properties.Events.MyItemEvent.Properties.Pattern.source.0
+        Message: Set event source
+        InputType: string
+      - JSONPath: >-
+          $.Resources.MyItemConsumer.Properties.Events.MyItemEvent.Properties.Pattern["detail-type"].0
+        Message: Set detail type
+        InputType: string
+    Placeholders:
+      - Placeholder: MyItem
+        message: Set value for 'MyItem' placeholder
+      - Placeholder: MyItem
+        message: Set value for 'MyItem' placeholder
+Resources:
+  MyItemConsumer:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Timeout: 3
+      Environment:
+        Variables:
+          DatabaseTable: !Ref MyItemTable
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref MyItemTable
+      Events:
+        MyItemEvent:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: default
+            Pattern:
+              source:
+                - my-source
+              detail-type:
+                - my-detail-type
+  MyItemTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: ID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ID
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
