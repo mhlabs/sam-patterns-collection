@@ -5,24 +5,24 @@ Metadata:
   PatternTransform:
     Properties:
       - JSONPath: >-
-          $.Resources.MyItemConsumer.Properties.Events.MyItemEvent.Properties.EventBusName
-        Message: Set eventbus
+          $.Resources.CartConsumer.Properties.Events.CartEvent.Properties.EventBusName
+        Message: Set eventbus name
         InputType: string
       - JSONPath: >-
-          $.Resources.MyItemConsumer.Properties.Events.MyItemEvent.Properties.Pattern.source.0
-        Message: Set event source
+          $.Resources.CartConsumer.Properties.Events.CartEvent.Properties.Pattern.source.0
+        Message: Set source
         InputType: string
       - JSONPath: >-
-          $.Resources.MyItemConsumer.Properties.Events.MyItemEvent.Properties.Pattern["detail-type"].0
+          $.Resources.CartConsumer.Properties.Events.CartEvent.Properties.Pattern["detail-type"].0
         Message: Set detail type
         InputType: string
     Placeholders:
-      - Placeholder: MyItem
-        message: Set value for 'MyItem' placeholder
-      - Placeholder: MyItem
-        message: Set value for 'MyItem' placeholder
+      - Placeholder: Cart
+        message: Set value for 'Cart' placeholder
+      - Placeholder: Cart
+        message: Set value for 'Cart' placeholder
 Resources:
-  MyItemConsumer:
+  CartConsumer:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
@@ -31,21 +31,22 @@ Resources:
       Timeout: 3
       Environment:
         Variables:
-          DatabaseTable: !Ref MyItemTable
+          DatabaseTable: !Ref CartTable
       Policies:
         - DynamoDBWritePolicy:
-            TableName: !Ref MyItemTable
+            TableName: !Ref CartTable
       Events:
-        MyItemEvent:
+        CartEvent:
           Type: EventBridgeRule
           Properties:
-            EventBusName: default
+            EventBusName: commerce
+            InputPath: $.detail.data.new
             Pattern:
               source:
-                - my-source
+                - ecom-cart-service
               detail-type:
-                - my-detail-type
-  MyItemTable:
+                - CartEvent
+  CartTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
