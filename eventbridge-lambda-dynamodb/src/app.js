@@ -4,6 +4,6 @@
 
 // dependencies
 
-exports.handler =  async (event) => {
-console.log(event);
-}
+exports.handler = async (event) => {
+  console.log(event);
+};
