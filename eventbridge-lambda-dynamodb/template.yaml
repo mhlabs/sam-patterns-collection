@@ -5,22 +5,22 @@ Metadata:
   PatternTransform:
     Properties:
       - JSONPath: >-
-          $.Resources.OrderEventConsumer.Properties.Events.OrderEvent.Properties.EventBusName
-        Message: Set eventbus name
+          $.Resources.MyItemEventConsumer.Properties.Events.MyItemEvent.Properties.EventBusName
+        Message: Set eventbus
         InputType: string
       - JSONPath: >-
-          $.Resources.OrderEventConsumer.Properties.Events.OrderEvent.Properties.Pattern.source.0
+          $.Resources.MyItemEventConsumer.Properties.Events.MyItemEvent.Properties.Pattern.source.0
         Message: Set source
         InputType: string
       - JSONPath: >-
-          $.Resources.OrderEventConsumer.Properties.Events.OrderEvent.Properties.Pattern["detail-type"].0
+          $.Resources.MyItemEventConsumer.Properties.Events.MyItemEvent.Properties.Pattern["detail-type"].0
         Message: Set detail type
         InputType: string
     Placeholders:
-      - Placeholder: Order
-        message: Set value for 'Order' placeholder
+      - Placeholder: MyItem
+        message: Set value for 'MyItem' placeholder
 Resources:
-  OrderEventConsumer:
+  MyItemEventConsumer:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
@@ -34,11 +34,10 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref Table
       Events:
-        OrderEvent:
+        MyItemEvent:
           Type: EventBridgeRule
           Properties:
             EventBusName: custombus
-            InputPath: $.detail
             Pattern:
               source:
                 - order-service
