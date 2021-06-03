@@ -5,24 +5,22 @@ Metadata:
   PatternTransform:
     Properties:
       - JSONPath: >-
-          $.Resources.CartConsumer.Properties.Events.CartEvent.Properties.EventBusName
+          $.Resources.OrderEventConsumer.Properties.Events.OrderEvent.Properties.EventBusName
         Message: Set eventbus name
         InputType: string
       - JSONPath: >-
-          $.Resources.CartConsumer.Properties.Events.CartEvent.Properties.Pattern.source.0
+          $.Resources.OrderEventConsumer.Properties.Events.OrderEvent.Properties.Pattern.source.0
         Message: Set source
         InputType: string
       - JSONPath: >-
-          $.Resources.CartConsumer.Properties.Events.CartEvent.Properties.Pattern["detail-type"].0
+          $.Resources.OrderEventConsumer.Properties.Events.OrderEvent.Properties.Pattern["detail-type"].0
         Message: Set detail type
         InputType: string
     Placeholders:
-      - Placeholder: Cart
-        message: Set value for 'Cart' placeholder
-      - Placeholder: Cart
-        message: Set value for 'Cart' placeholder
+      - Placeholder: Order
+        message: Set value for 'Order' placeholder
 Resources:
-  CartConsumer:
+  OrderEventConsumer:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
@@ -31,22 +29,22 @@ Resources:
       Timeout: 3
       Environment:
         Variables:
-          DatabaseTable: !Ref CartTable
+          DatabaseTable: !Ref Table
       Policies:
         - DynamoDBWritePolicy:
-            TableName: !Ref CartTable
+            TableName: !Ref Table
       Events:
-        CartEvent:
+        OrderEvent:
           Type: EventBridgeRule
           Properties:
-            EventBusName: commerce
-            InputPath: $.detail.data.new
+            EventBusName: custombus
+            InputPath: $.detail
             Pattern:
               source:
-                - ecom-cart-service
+                - order-service
               detail-type:
-                - CartEvent
-  CartTable:
+                - order-event
+  Table:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
