@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+Metadata:
+  PatternTransform:
+    Properties: []
+    Placeholders: []
+Resources:
+  S3Consumer:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src
+      Handler: S3Consumer.handler
+      Runtime: nodejs14.x
+      MemorySize: 256
+      Timeout: 15
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref Bucket
+      Events:
+        S3Trigger:
+          Type: EventBridgeRule
+          Properties:
+            InputPath: $.detail.requestParameters
+            Pattern:
+              source:
+                - aws.s3
+              detail-type:
+                - AWS API Call via CloudTrail
+              detail:
+                eventName:
+                  - PutObject
+                  - CompleteMultipartUpload
+                requestParameters:
+                  bucketName:
+                    - !Ref Bucket
+  Bucket:
+    Type: AWS::S3::Bucket
