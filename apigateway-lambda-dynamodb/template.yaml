@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+Globals:
+  Function:
+    CodeUri: ./src
+    Runtime: nodejs14.x
+    MemorySize: 128
+    Timeout: 15
+Metadata:
+  PatternTransform:
+    Properties:
+      - JSONPath: $.Globals.Function.MemorySize
+        Message: Set memory size
+        InputType: number
+    Placeholders: []
+Resources:
+  GetItem:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: GetItem.handler
+      Events:
+        GetItem:
+          Type: Api
+          Properties:
+            Method: get
+            Path: /item
+      CodeUri: src/
+      Runtime: nodejs14.x
+      Timeout: 3
+      Environment:
+        Variables:
+          DatabaseTable: !Ref DynamoTable
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref DynamoTable
+  PutItem:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: PutItem.handler
+      Events:
+        PutItem:
+          Type: Api
+          Properties:
+            Method: put
+            Path: /item
+      CodeUri: src/
+      Runtime: nodejs14.x
+      Timeout: 3
+      Environment:
+        Variables:
+          DatabaseTable: !Ref DynamoTable
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref DynamoTable
+  DynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: ID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ID
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
