@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+Metadata:
+  PatternTransform:
+    Properties: []
+    Placeholders: []
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+  S3ConsumerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: ConsumerFunction.handler
+      Runtime: nodejs14.x
+      Timeout: 10
+      Environment:
+        Variables:
+          BucketName: !Ref S3Bucket
+      Events:
+        S3Event:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: default
+            InputPath: $.detail.object
+            Pattern:
+              source:
+                - aws.s3
+              detail-type:
+                - Object Created
+              detail:
+                bucket:
+                  name:
+                    - !Ref S3Bucket
+                object:
+                  key:
+                    - prefix: myprefix/
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref S3Bucket
