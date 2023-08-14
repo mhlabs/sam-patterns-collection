@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+Metadata:
+  PatternTransform:
+    Properties: []
+    Placeholders: []
+Resources:
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub ${AWS::StackName}-StateMachine
+      DefinitionUri: statemachine.yaml
